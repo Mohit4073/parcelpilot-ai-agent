@@ -22,7 +22,11 @@ app = FastAPI(title="ParcelPilot AI Agent")
 # Allow the React dev server (and later, your deployed frontend) to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://parcelpilot-ai-agent-ten.vercel.app/", "http://localhost:5173"],  # tighten this to your actual frontend URL before final submission
+    allow_origins=[
+        "https://parcelpilot-ai-agent-pgtgutwip-mohit-b52d.vercel.app",
+        "https://parcelpilot-ai-agent-git-main-mohit-b52d.vercel.app",
+        "http://localhost:5173",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
