@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://parcelpilot-ai-agent-5dkg.onrender.com";
 
 export async function loginUser(sessionId, userId) {
   const res = await fetch(`${API_BASE}/login`, {
