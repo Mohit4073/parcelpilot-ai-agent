@@ -13,16 +13,35 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import chromadb
-from chromadb.utils import embedding_functions
+from chromadb import Documents, EmbeddingFunction, Embeddings
+from google import genai
+from dotenv import load_dotenv
 
 from data_loader import load_documents, DocChunk
+
+load_dotenv()
 
 CHROMA_DIR = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 COLLECTION_NAME = "parcelpilot_docs"
 
-# Uses Chroma's built-in default embedding function (all-MiniLM-L6-v2, local,
-# no API key needed) so this tool works even before Gemini is wired in.
-_embed_fn = embedding_functions.DefaultEmbeddingFunction()
+_genai_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
+
+class GeminiEmbeddingFunction(EmbeddingFunction):
+    """
+    Uses Gemini's embedding API instead of a local sentence-transformers model.
+    This avoids pulling in PyTorch, which was causing out-of-memory crashes
+    on Render's 512MB free tier.
+    """
+    def __call__(self, input: Documents) -> Embeddings:
+        result = _genai_client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=input,
+        )
+        return [e.values for e in result.embeddings]
+
+
+_embed_fn = GeminiEmbeddingFunction()
 
 _client = chromadb.PersistentClient(path=CHROMA_DIR)
 
