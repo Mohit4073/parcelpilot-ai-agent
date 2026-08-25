@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+.env
+
+# Chroma DB persisted data
+backend/chroma_db/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
