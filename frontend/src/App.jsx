@@ -119,7 +119,44 @@ export default function App() {
             )}
             {messages.map((msg, i) => (
               <div key={i} className={`message ${msg.role} ${msg.isError ? "error" : ""}`}>
-                {/* ... all your existing message rendering code stays exactly as it was ... */}
+                <div className="message-text">{msg.text}</div>
+
+                {msg.toolTrace?.length > 0 && (
+                  <details className="tool-trace">
+                    <summary>{msg.toolTrace.length} tool call(s) used</summary>
+                    <ul>
+                      {msg.toolTrace.map((t, j) => (
+                        <li key={j}>
+                          <code>{t.tool}</code>
+                          {Object.keys(t.args || {}).length > 0 && (
+                            <span className="tool-args"> {JSON.stringify(t.args)}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+
+                {msg.pendingActions?.map((action) => (
+                  <div key={action.action_id} className="action-card">
+                    <div className="action-type">{action.action_type.replace("_", " ")}</div>
+                    <div className="action-reason">{action.payload?.reason}</div>
+                    {action.needs_manager_approval && (
+                      <div className="action-warning">⚠ Requires manager approval</div>
+                    )}
+                    {action.status === "confirmed" ? (
+                      <div className="action-confirmed">✓ Confirmed</div>
+                    ) : (
+                      <button
+                        className="confirm-button"
+                        disabled={confirmingId === action.action_id}
+                        onClick={() => handleConfirm(action.action_id)}
+                      >
+                        {confirmingId === action.action_id ? "Confirming..." : "Confirm action"}
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
             {loading && <div className="message assistant"><div className="typing">Thinking...</div></div>}
