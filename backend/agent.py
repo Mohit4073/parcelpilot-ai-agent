@@ -173,16 +173,23 @@ def run_agent(user_message: str, user: UserContext, chat=None) -> dict:
 
     history_len_before = len(chat.get_history())
 
+    def _is_transient(e: Exception) -> bool:
+        msg = str(e).lower()
+        return "resource_exhausted" in msg or "quota" in msg or "unavailable" in msg or "503" in msg
+
     try:
         response = chat.send_message(user_message)
-    except errors.ClientError as e:
-        if "RESOURCE_EXHAUSTED" in str(e) or "quota" in str(e).lower():
-            time.sleep(20)
+    except (errors.ClientError, errors.ServerError) as e:
+        if _is_transient(e):
+            time.sleep(10)
             try:
                 response = chat.send_message(user_message)
-            except errors.ClientError:
-                time.sleep(30)
-                response = chat.send_message(user_message)
+            except (errors.ClientError, errors.ServerError) as e2:
+                if _is_transient(e2):
+                    time.sleep(20)
+                    response = chat.send_message(user_message)
+                else:
+                    raise
         else:
             raise
 

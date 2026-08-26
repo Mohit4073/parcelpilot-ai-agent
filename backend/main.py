@@ -89,8 +89,15 @@ def chat(req: ChatRequest):
     user = _get_session_user(req.session_id)
     chat_obj = _sessions.get(req.session_id)
 
-    result = run_agent(req.message, user, chat=chat_obj)
-    _sessions[req.session_id] = result["chat"]  # persist updated chat state
+    try:
+        result = run_agent(req.message, user, chat=chat_obj)
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail="The AI service is temporarily unavailable (high demand on Google's end). Please try again in a moment."
+        )
+
+    _sessions[req.session_id] = result["chat"]
 
     return {
         "answer": result["answer"],
