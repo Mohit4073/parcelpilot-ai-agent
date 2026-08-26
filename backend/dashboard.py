@@ -17,11 +17,28 @@ KNOWN_ISSUE_KEYWORDS = {
 # Naive severity classifier from ticket subject/description text, mirroring
 # the same P1/P2/P3 definitions the agent uses (Support Policy v3 Section 2).
 def _classify_severity(ticket: dict) -> str:
+    """
+    Mirrors Support Policy v3 Section 2's severity definitions as keyword
+    signals. P1 checked first and matched broadly, since under-classifying
+    a true outage/security incident is the worse failure mode.
+    """
     text = f"{ticket.get('subject', '')} {ticket.get('description', '')}".lower()
-    if any(k in text for k in ["outage", "security", "credential", "api key", "exposed", "breach"]):
+
+    p1_signals = [
+        "outage", "security", "credential", "api key", "exposed", "breach",
+        "all shipment", "every user", "cannot create", "unable to create",
+        "http 500", "500 error", "down for all",
+    ]
+    if any(s in text for s in p1_signals):
         return "P1"
-    if any(k in text for k in ["degraded", "not working", "fail", "delay"]):
+
+    p2_signals = [
+        "degraded", "not working", "delay", "some users", "intermittent",
+        "webhook", "bulk upload", "upload fail",
+    ]
+    if any(s in text for s in p2_signals):
         return "P2"
+
     return "P3"
 
 
